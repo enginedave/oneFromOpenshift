@@ -16,6 +16,9 @@ return array(
 	'import'=>array(
 		'application.models.*',
 		'application.components.*',
+		'application.extensions.MongoYii.*',
+		'application.extensions.MongoYii.validators.*',
+		'application.extensions.MongoYii.behaviors.*'
 	),
 
 	'modules'=>array(
@@ -47,9 +50,18 @@ return array(
 			),
 		),
 		*/
+		'mongodb' => array(
+			'class' => 'EMongoClient',
+			//'server' => 'mongodb://localhost:27017',
+			'server' => 'mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
+			'db' => 'one'
+			
+		),
+		/*
 		'db'=>array(
 			'connectionString' => 'sqlite:'.dirname(__FILE__).'/../data/testdrive.db',
 		),
+		*/
 		// uncomment the following to use a MySQL database
 		/*
 		'db'=>array(
