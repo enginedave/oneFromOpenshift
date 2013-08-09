@@ -135,7 +135,7 @@
     git push
   </pre>
   <p>
-    Then reload this page.
+    Then reload this page. This is my additional text to this page as a test.
   </p>
   
   <h2>
