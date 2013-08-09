@@ -52,9 +52,9 @@ return array(
 		*/
 		'mongodb' => array(
 			'class' => 'EMongoClient',
-			'server' => 'mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
-			'db' => 'admin:3UtiRg4ZdhYq@one'
-			
+			//'server' => 'mongodb://localhost:27017',
+			'server' => 'mongodb://admin:3UtiRg4ZdhYq@$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
+			'db' => 'one'
 		),
 		/*
 		'db'=>array(
