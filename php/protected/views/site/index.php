@@ -14,13 +14,6 @@ $this->pageTitle=Yii::app()->name;
 	<li>Layout file: <code><?php echo $this->getLayoutFile('main'); ?></code></li>
 </ul>
 
-<p>
-This is some of the test code to see if the app is connecting to the MongoDB service.
-
-
-
-</p>
-
 
 
 <p>For more details on how to further develop this application, please read
