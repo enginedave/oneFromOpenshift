@@ -14,6 +14,20 @@ $this->pageTitle=Yii::app()->name;
 	<li>Layout file: <code><?php echo $this->getLayoutFile('main'); ?></code></li>
 </ul>
 
+<p>
+This is some of the test code to see if the app is connecting to the MongoDB service.
+
+
+
+</p>
+
+<?php
+//get the db object which is a EMongoClient object
+		$dbobj = Yii::app()->mongodb;
+		var_dump($dbobj);
+		echo '<br /><br />';
+?>
+
 <p>For more details on how to further develop this application, please read
 the <a href="http://www.yiiframework.com/doc/">documentation</a>.
 Feel free to ask in the <a href="http://www.yiiframework.com/forum/">forum</a>,
