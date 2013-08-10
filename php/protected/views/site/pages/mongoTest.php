@@ -46,7 +46,7 @@ This is some of the test code to see if the app is connecting to the MongoDB ser
 		$collection = $dbobj->citys;
 		var_dump($collection);
 		echo '<br /><br />';
-		
+		/*
 		//insert some stuff
 		$document = array( 'city' => 'Londonderry', 'state' => 'Northern Ireland' );
 		$collection->insert($document);
@@ -54,7 +54,7 @@ This is some of the test code to see if the app is connecting to the MongoDB ser
 		$collection->insert($document);
 		$document = array( 'city' => 'New York', 'state' => 'USA' );
 		$collection->insert($document);
-		
+		*/
 		
 		
 		

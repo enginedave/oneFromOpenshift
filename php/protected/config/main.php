@@ -52,15 +52,23 @@ return array(
 		*/
 		'mongodb' => array(
 			'class' => 'EMongoClient',
+			
+			//UNCOMMENT THE NEXT LINE FOR LOCAL HOST ON LOCAL MACHINE
 			//'server' => 'mongodb://localhost:27017',
-			//'server' => 'mongodb://admin:3UtiRg4ZdhYq@$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
 			
+			/*
+			OPENSHIFT INSTRUCTIONS FOR CONNECTION
+			The server string below needs to be declared specifically. There seems
+			to be an issue accessing the environment variables. To get the actual values  
+			ssh into the application by
+				rhc app ssh -a one 
+			"one" being the application name
+				then type "export" to list all the environment variables
+			include the username:password@host:port format for the server string
+			*/
+			
+			//UNCOMMENT THE NEXT LINE FOR REMOTE HOST ON OPENSHIFT
 			'server' => 'mongodb://admin:3UtiRg4ZdhYq@127.2.45.2:27017/',
-			
-			//'options' => array(
-			//	'username' => 'admin',
-			//	'password' => '3UtiRg4ZdhYq'
-			//),
 			
 			'db' => 'one'
 		),
