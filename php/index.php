@@ -1,13 +1,14 @@
-<?php
+<h1>This is a test page</h1>
+<p>This is a test page to see if I can get the Mongo DB to connect to my application</p>
 
-// change the following paths if necessary
-$yii=dirname(__FILE__).'/../yiiroot/framework/yii.php';
-$config=dirname(__FILE__).'/protected/config/main.php';
+<?php 
 
-// remove the following lines when in production mode
-defined('YII_DEBUG') or define('YII_DEBUG',true);
-// specify how many levels of call stack should be shown in each log message
-defined('YII_TRACE_LEVEL') or define('YII_TRACE_LEVEL',3);
+$server = 'mongodb://admin:3UtiRg4ZdhYq@'.$OPENSHIFT_MONGODB_DB_HOST.':'.$OPENSHIFT_MONGODB_DB_PORT.'/';
+		
+$connection = new MongoClient($server);
+var_dump($connection);
+echo '<br /><br />';
 
-require_once($yii);
-Yii::createWebApplication($config)->run();
+
+
+?>
