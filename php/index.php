@@ -4,6 +4,8 @@
 <?php 
 
 $server = 'mongodb://admin:3UtiRg4ZdhYq@'.$OPENSHIFT_MONGODB_DB_HOST.':'.$OPENSHIFT_MONGODB_DB_PORT.'/';
+
+echo 'this is the server:'.$server;
 		
 $connection = new MongoClient($server);
 var_dump($connection);
