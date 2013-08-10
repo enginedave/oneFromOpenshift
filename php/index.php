@@ -3,7 +3,12 @@
 
 <?php 
 
-$server = 'mongodb://admin:3UtiRg4ZdhYq@'.$OPENSHIFT_MONGODB_DB_HOST.':'.$OPENSHIFT_MONGODB_DB_PORT.'/';
+
+
+$host = getenv($OPENSHIFT_MONGODB_DB_HOST);
+$port = getenv($OPENSHIFT_MONGODB_DB_PORT);
+
+$server = 'mongodb://admin:3UtiRg4ZdhYq@'.$host.':'.$port.'/';
 
 echo 'this is the server:'.$server;
 		
