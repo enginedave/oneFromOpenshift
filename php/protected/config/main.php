@@ -53,7 +53,16 @@ return array(
 		'mongodb' => array(
 			'class' => 'EMongoClient',
 			//'server' => 'mongodb://localhost:27017',
-			'server' => 'mongodb://admin:3UtiRg4ZdhYq@$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
+			//'server' => 'mongodb://admin:3UtiRg4ZdhYq@$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
+			
+			'server' => 'mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
+			
+			
+			'options' => array(
+				'username' => 'admin',
+				'password' => '3UtiRg4ZdhYq'
+			),
+			
 			'db' => 'one'
 		),
 		/*
