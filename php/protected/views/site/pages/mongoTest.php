@@ -31,15 +31,15 @@ This is some of the test code to see if the app is connecting to the MongoDB ser
 		
 		
 		//get the db object which is a EMongoClient object
-		//$dbobj = Yii::app()->mongodb;
-		//var_dump($dbobj);
-		//echo '<br /><br />';
-		
-		$server = 'mongodb://admin:3UtiRg4ZdhYq@'.$OPENSHIFT_MONGODB_DB_HOST.':'.$OPENSHIFT_MONGODB_DB_PORT.'/';
-		
-		$connection = new MongoClient($server);
-		var_dump($connection);
+		$dbobj = Yii::app()->mongodb;
+		var_dump($dbobj);
 		echo '<br /><br />';
+		
+		//$server = 'mongodb://admin:3UtiRg4ZdhYq@'.$OPENSHIFT_MONGODB_DB_HOST.':'.$OPENSHIFT_MONGODB_DB_PORT.'/';
+		
+		//$connection = new MongoClient($server);
+		//var_dump($connection);
+		//echo '<br /><br />';
 		
 		
 		

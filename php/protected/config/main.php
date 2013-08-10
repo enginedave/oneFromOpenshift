@@ -55,13 +55,12 @@ return array(
 			//'server' => 'mongodb://localhost:27017',
 			//'server' => 'mongodb://admin:3UtiRg4ZdhYq@$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
 			
-			'server' => 'mongodb://$OPENSHIFT_MONGODB_DB_HOST:$OPENSHIFT_MONGODB_DB_PORT/',
+			'server' => 'mongodb://admin:3UtiRg4ZdhYq@127.2.45.2:27017/',
 			
-			
-			'options' => array(
-				'username' => 'admin',
-				'password' => '3UtiRg4ZdhYq'
-			),
+			//'options' => array(
+			//	'username' => 'admin',
+			//	'password' => '3UtiRg4ZdhYq'
+			//),
 			
 			'db' => 'one'
 		),
