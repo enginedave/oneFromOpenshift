@@ -80,6 +80,8 @@ This is some of the test code to see if the app is connecting to the MongoDB ser
 		$mongoVersion = phpversion('mongo');
 		echo '<p>The version of the mongo driver is : '.$mongoVersion.' </p>';
 		
+		echo '<br /><br />';
+		echo '<p> This is Yii version : '.Yii::getVersion().'</p>';
 		
 		
 ?>
