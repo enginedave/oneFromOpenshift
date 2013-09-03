@@ -65,7 +65,7 @@ return array(
 			'class' => 'EMongoClient',
 			
 			//UNCOMMENT THE NEXT LINE FOR LOCAL HOST ON LOCAL MACHINE
-			'server' => 'mongodb://localhost:27017',
+			//'server' => 'mongodb://localhost:27017',
 			
 			/*
 			OPENSHIFT INSTRUCTIONS FOR CONNECTION
@@ -79,7 +79,7 @@ return array(
 			*/
 			
 			//UNCOMMENT THE NEXT LINE FOR REMOTE HOST ON OPENSHIFT
-			//'server' => 'mongodb://admin:3UtiRg4ZdhYq@127.2.45.2:27017/',
+			'server' => 'mongodb://admin:3UtiRg4ZdhYq@127.2.45.2:27017/',
 			
 			'db' => 'one'
 		),
