@@ -83,9 +83,18 @@ class TransactionController extends Controller
 
 		if(isset($_POST['Transaction']))
 		{
+			//echo '<br /><br /><br /><br /><br /><br />';
+			//var_dump($model);
+			//echo '<br /><br /><br /><br /><br /><br />';
+			//var_dump($_POST['Transaction']);
 			$model->attributes=$_POST['Transaction'];
-			if($model->save())
+			//echo '<br /><br /><br /><br /><br /><br />';
+			//var_dump($model);
+			if($model->save()){
+				//echo '<br /><br /><br /><br /><br /><br />';
+				//var_dump($model);
 				$this->redirect(array('view','id'=>$model->_id));
+			}
 		}
 
 		$this->render('create',array(
@@ -101,13 +110,13 @@ class TransactionController extends Controller
 	public function actionUpdate($id)
 	{
 		//$model=$this->loadModel($id);
-		$model=Mytestmodel::model()->findOne(array('_id'=>new MongoId($id)));
+		$model=Transaction::model()->findOne(array('_id'=>new MongoId($id)));
 		// Uncomment the following line if AJAX validation is needed
 		// $this->performAjaxValidation($model);
 
-		if(isset($_POST['Mytestmodel']))
+		if(isset($_POST['Transaction']))
 		{
-			$model->attributes=$_POST['Mytestmodel'];
+			$model->attributes=$_POST['Transaction'];
 			if($model->save())
 				$this->redirect(array('view','id'=>$model->_id));
 		}
@@ -116,6 +125,22 @@ class TransactionController extends Controller
 			'model'=>$model,
 		));
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	/**
 	 * Deletes a particular model.

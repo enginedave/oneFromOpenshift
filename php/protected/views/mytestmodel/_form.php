@@ -12,6 +12,8 @@
 	<?php echo $form->textFieldRow($model,'desc',array('class'=>'span5','maxlength'=>150)); ?>
 
 	<?php echo $form->textFieldRow($model,'amount',array('class'=>'span5','maxlength'=>150)); ?>
+	
+	<?php echo $form->textFieldRow($model,'ano',array('class'=>'span5','maxlength'=>150)); ?>
 
 	<div class="form-actions">
 		<?php $this->widget('bootstrap.widgets.TbButton', array(

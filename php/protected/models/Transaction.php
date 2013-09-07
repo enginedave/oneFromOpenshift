@@ -7,6 +7,7 @@ class Transaction extends EMongoDocument{
 
 	// We are going to predefine the schema here
 	// the _id variable is automatically created by the Mongodb database itself
+	/*
 	public $useremail;
 	public $userrole; //to be used for possible premium user that has access to more functionality
 	public $date;
@@ -20,6 +21,7 @@ class Transaction extends EMongoDocument{
 	public $amount;
 	public $reconciled; //this is a flag set when the transaction is reconciled on the users bank statement
 	public $notes;
+	*/
 		
 	function collectionName(){
 		return 'transactions';
@@ -50,9 +52,10 @@ class Transaction extends EMongoDocument{
 	 
 	function rules(){
 		return array(
-			array('date, accountname, maincat, subcat, amount','required'),
+			array('useremail, date, accountname, maincat, subcat, amount','required'),
 			array('date, accountname, maincat, subcat, amount','length','max'=>255),
-			array('date, accountname, maincat, subcat, amount', 'safe', 'on' => 'search')
+			array('useremail,userrole,date,accountname,accounttype,openingbalance,maincat,subcat,inorout,payee,amount,reconciled,notes', 'safe'),
+			array('useremail,userrole,date,accountname,accounttype,openingbalance,maincat,subcat,inorout,payee,amount,reconciled,notes', 'safe', 'on' => 'search')
 		);
 	}
 }

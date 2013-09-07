@@ -216,6 +216,8 @@ Returns a string representing the collection name. All active record models shou
 
 Currently only returns `_id` as the key.
 
+### Using a Custom Primary Key
+
 If you are using a primary key that IS NOT a `ObjectId` (otherwise known as a `MongoId` in the PHP driver) then you should override the `getPrimaryKey` function of the `EMongoDocument`
 to not return a `MongoId`:
 
@@ -664,6 +666,10 @@ Get and set the limit of the query.
 ### getProject() / setProject()
 
 Sets the projection of the criteria to state specific fields to include/omit.
+
+### getSelect() / setSelect()
+
+These provide aliases for `getProject()` and `setProject()`.
 
 ### compare()
 

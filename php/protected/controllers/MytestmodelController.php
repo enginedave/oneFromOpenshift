@@ -27,7 +27,7 @@ class MytestmodelController extends Controller
 	{
 		return array(
 			array('allow',  // allow all users to perform 'index' and 'view' actions
-				'actions'=>array('index','view'),
+				'actions'=>array('index','view','mytest'),
 				'users'=>array('*'),
 			),
 			array('allow', // allow authenticated user to perform 'create' and 'update' actions
@@ -83,14 +83,54 @@ class MytestmodelController extends Controller
 
 		if(isset($_POST['Mytestmodel']))
 		{
+			echo '<br /><br /><br /><br /><br /><br />The Basic model just created';
+			var_dump($model);
+			echo '<br /><br /><br /><br /><br /><br />The post array';
+			var_dump($_POST['Mytestmodel']);
 			$model->attributes=$_POST['Mytestmodel'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->_id));
+			echo '<br /><br /><br /><br /><br /><br />After the attributes have been assigned';
+			var_dump($model);
+			if($model->save()){
+				//$this->redirect(array('view','id'=>$model->_id));
+				echo '<br /><br /><br /><br /><br /><br />After the save to the DB';
+				var_dump($model);
+			}
 		}
 
 		$this->render('create',array(
 			'model'=>$model,
 		));
+	}
+	
+	public function actionMytest()
+	{
+		$model=new Mytestmodel;
+		
+		$model->date = '7-9-2013';
+		$model->desc = 'the description';
+		$model->amount = '23.67';
+		$model->ano = 'this is the variable that is not included in any rule';
+		
+		var_dump($model);//shows all 4 variables assigned 
+		$model->save();
+		var_dump($model);//shows all 4 variables assigned
+		
+		$model2=new Mytestmodel;
+		
+		//create an example of a post array coming from a web form
+		$examplePostArray = array(
+			'date'=>'8-9-2013',
+			'desc'=>'another description',
+			'amount'=>'34.89',
+			'ano'=>'this is the variable that is not included in any rule'
+		);
+		var_dump($examplePostArray);//shows the 4 variables
+		
+		//I am expecting the following line to assign all 4 attributes
+		//to $model2 but only the first 3 get assigned?
+		$model2->attributes=$examplePostArray;
+		
+		var_dump($model2);//the variable ano does not get assigned! 
 	}
 
 	/**
