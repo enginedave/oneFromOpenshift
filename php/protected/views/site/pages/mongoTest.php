@@ -74,11 +74,11 @@ This is some of the test code to see if the app is connecting to the MongoDB ser
 		
 		echo '<h1>This iterates over the cursor and echos the actual values object</h1>';
 		foreach($cursor as $doc) {
-			echo 'The city is: '.$doc['city'].' and the state is: '.$doc['state'].'<br />';
+			echo 'The city is: '.$doc['city'].' and the state is: '.$doc['state'].'<br /><br />';
 		}
 		
 		$mongoVersion = phpversion('mongo');
-		echo '<p>The version of the mongo driver is : '.$mongoVersion.' </p>';
+		echo '<p>The version of the mongo PHP driver is : '.$mongoVersion.' </p>';
 		
 		echo '<br /><br />';
 		echo '<p> This is Yii version : '.Yii::getVersion().'</p>';
