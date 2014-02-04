@@ -28,6 +28,8 @@ $this->pageTitle=Yii::app()->name;
 
 </ul>
 
+<p>This application has now been cloned to cloud9 ide and sucessfully edited</p>
+
 <p>For more details on how to further develop this application, please read
     the <a href="http://www.yiiframework.com/doc/">documentation</a>.
     Feel free to ask in the <a href="http://www.yiiframework.com/forum/">forum</a>,
