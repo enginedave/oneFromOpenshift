@@ -28,7 +28,9 @@ $this->pageTitle=Yii::app()->name;
 
 </ul>
 
-<p>This application has now been cloned to cloud9 ide and sucessfully edited. All good.</p>
+<p>This application has now been cloned to cloud9 ide and sucessfully edited. All good.
+The mongo extension has been added (version 3.4.0) which was updated on 29th January 2014. I have uploaded 
+this version to the openshift server on 15th February 2014.</p>
 
 <p>For more details on how to further develop this application, please read
     the <a href="http://www.yiiframework.com/doc/">documentation</a>.

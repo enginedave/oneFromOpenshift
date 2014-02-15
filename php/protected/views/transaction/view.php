@@ -13,7 +13,7 @@ $this->menu=array(
 );
 ?>
 
-<h1>View Transaction #<?php echo $model->_id; ?></h1>
+<h1>This is Transaction Number:<?php echo $model->_id; ?></h1>
 
 <?php $this->widget('bootstrap.widgets.TbDetailView',array(
 	'data'=>$model,
