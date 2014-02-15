@@ -9,5 +9,21 @@
             "name": "Sammaye",
             "homepage": "http://sammaye.wordpress.com"
         }
-    ]
+    ],
+    "autoload": {
+    	"classmap": [
+    		"./behaviors",
+    		"./util",
+    		"./validators",
+    		"./EMongoClient.php",
+    		"./EMongoCriteria.php",
+    		"./EMongoCursor.php",
+    		"./EMongoDataProvider.php",
+    		"./EMongoDocument.php",
+    		"./EMongoFile.php",
+    		"./EMongoLogRoute.php",
+    		"./EMongoModel.php",
+    		"./EMongoSort.php"
+    	]
+    }
 }

@@ -15,8 +15,7 @@ class ESubdocumentValidator extends CValidator{
 
 	public $scenario;
 
-	public $preserveKeys = true;
-	public $strict = true;
+	public $preserveKeys=true;
 
 	public function validateAttribute($object, $attribute){
 
@@ -53,7 +52,6 @@ class ESubdocumentValidator extends CValidator{
 
 				$fieldErrors = array();
 				$fieldValue = array();
-				$newFieldValue = array();
 
 				foreach($object->$attribute as $index=>$row){
 					$c->clean();
@@ -68,18 +66,6 @@ class ESubdocumentValidator extends CValidator{
 						else
 							$fieldErrors[] = $c->getErrors();
 					}
-					
-					// Lets get the field value again to apply filters etc
-					if($this->strict){
-						if($this->preserveKeys)
-						    $newFieldValue[$index] = $c->getRawDocument();
-						else
-						    $newFieldValue[] = $c->getRawDocument();
-					}
-				}
-				
-				if(!$this->strict){
-					$newFieldValue = $fieldValue;
 				}
 
 				if($this->message!==null){
@@ -89,7 +75,7 @@ class ESubdocumentValidator extends CValidator{
 				}
 
 				// Strip the models etc from the field value
-				$object->$attribute = $newFieldValue;
+				$object->$attribute = $fieldValue;
 			}
 		}else{
 			$c->clean();
@@ -101,11 +87,6 @@ class ESubdocumentValidator extends CValidator{
 				}elseif(sizeof($c->getErrors())>0){
 					$this->setAttributeErrors($object, $attribute, $c->getErrors());
 				}
-			}
-			
-			// Lets get the field value again to apply filters etc
-			if($this->strict){
-				$fieldValue = $c->getRawDocument();
 			}
 
 			// Strip the models etc from the field value

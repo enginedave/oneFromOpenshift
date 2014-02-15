@@ -20,7 +20,7 @@ class EMongoDocument extends EMongoModel{
 	/**
 	 * Whether or not the document is new
 	 * @var boolean
-	 */
+	*/
 	private $_new = false;
 
 	/**
@@ -40,7 +40,7 @@ class EMongoDocument extends EMongoModel{
 	 * A bit deceptive, this var actually holds the last response from the server. The reason why it is called this
 	 * is because this is what MongoDB calls it.
 	 * @var array
-	 */
+	*/
 	private $lastError;
 
 	/**
@@ -70,17 +70,15 @@ class EMongoDocument extends EMongoModel{
 	/**
 	 * This, in addition to EMongoModels edition, will also call scopes on the model
 	 * @see EMongoModel::__call()
-     * @param string $name
-     * @param array $parameters
-     * @return EMongoDocument|mixed
-     */
-    public function __call($name, $parameters){
-
+	 * @param string $name
+	 * @param array $parameters
+	 * @return EMongoDocument|mixed
+	 */
+	public function __call($name, $parameters){
 		if(array_key_exists($name, $this->relations())){
 			if(empty($parameters))
 				return $this->getRelated($name, false);
-			else
-				return $this->getRelated($name, false, $parameters[0]);
+			return $this->getRelated($name, false, $parameters[0]);
 		}
 
 		$scopes = $this->scopes();
@@ -128,7 +126,7 @@ class EMongoDocument extends EMongoModel{
 	 * 	'limit' => 10
 	 * )
 	 *
-     * @return array - An array which represents a single scope within the scope() function
+	 * @return array - An array which represents a single scope within the scope() function
 	 */
 	public function defaultScope()
 	{
@@ -142,10 +140,7 @@ class EMongoDocument extends EMongoModel{
 	 */
 	public function resetScope($resetDefault = true)
 	{
-		if($resetDefault)
-			$this->_criteria = array();
-		else
-			$this->_criteria = null;
+		$this->_criteria = ($resetDefault ? array() : null);
 		return $this;
 	}
 
@@ -155,10 +150,28 @@ class EMongoDocument extends EMongoModel{
 	 * @example
 	 *
 	 * return 'users';
-     *
-     * @return string
+	 *
+	 * @return string
 	 */
-	function collectionName(){  }
+	public function collectionName(){
+		return get_class($this);
+	}
+
+	/**
+	 * Denotes whether or not this document is versioned
+	 * @return boolean
+	 */
+	public function versioned(){
+		return false;
+	}
+
+	/**
+	 * Denotes the field tob e used to house the version number
+	 * @return string
+	 */
+	public function versionField(){
+		return '_v';
+	}
 
 	/**
 	 * Returns MongoId based on $value
@@ -182,10 +195,10 @@ class EMongoDocument extends EMongoModel{
 
 	/**
 	 * Returns the value of the primary key
-     * @param string|MongoId $value
-     * @return MongoId
-     */
-    public function getPrimaryKey($value = null){
+	 * @param string|MongoId $value
+	 * @return MongoId
+	 */
+	public function getPrimaryKey($value = null){
 		if($value === null)
 			$value = $this->{$this->primaryKey()};
 		return $this->getMongoId($value);
@@ -197,7 +210,7 @@ class EMongoDocument extends EMongoModel{
 	 * This property is automatically set in constructor and {@link populateRecord}.
 	 * Defaults to false, but it will be set to true if the instance is created using
 	 * the new operator.
-     * @return boolean
+	 * @return boolean
 	 */
 	public function getIsNewRecord(){
 		return $this->_new;
@@ -205,8 +218,8 @@ class EMongoDocument extends EMongoModel{
 
 	/**
 	 * Sets if the record is new.
-     * Whether the record is new and should be inserted when calling {@link save}.
-     * @see EMongoDocument::getIsNewRecord()
+	 * Whether the record is new and should be inserted when calling {@link save}.
+	 * @see EMongoDocument::getIsNewRecord()
 	 * @param boolean $value
 	 */
 	public function setIsNewRecord($value){
@@ -215,9 +228,9 @@ class EMongoDocument extends EMongoModel{
 
 	/**
 	 * Gets a list of the projected fields for the model
-     * @return array|string[]
-     */
-    public function getProjectedFields(){
+	 * @return array|string[]
+	 */
+	public function getProjectedFields(){
 		return $this->_projected_fields;
 	}
 
@@ -230,12 +243,45 @@ class EMongoDocument extends EMongoModel{
 	}
 
 	/**
+	 * Gets the version of this document
+	 * @return string
+	 */
+	public function version(){
+		return $this->{$this->versionField()};
+	}
+
+	/**
+	 * Forceably increments the version of this document
+	 * @return bool
+	 */
+	public function incrementVersion(){
+		$resp=$this->updateByPk($this->getPrimaryKey(),array('$inc'=>array($this->versionField() => 1)));
+		if($resp['n'] <= 0)
+			return false;
+		$this->{$this->versionField()}+=1;
+		return true;
+	}
+
+	/**
+	 * Forceably sets the version of this document
+	 * @param mixed $n
+	 * @return bool
+	 */
+	public function setVersion($n){
+		$resp=$this->updateByPk($this->getPrimaryKey(),array('$set'=>array($this->versionField() => $n)));
+		if($resp['n'] <= 0)
+			return false;
+		$this->{$this->versionField()}=$n;
+		return true;
+	}
+
+	/**
 	 * Sets the attribute of the model
-     * @param string $name
-     * @param mixed $value
-     * @return bool
-     */
-    public function setAttribute($name, $value){
+	 * @param string $name
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public function setAttribute($name, $value){
 		// At the moment the projection is restricted to only fields returned in result set
 		// Uncomment this to change that
 		//if($this->getIsPartial())
@@ -262,24 +308,21 @@ class EMongoDocument extends EMongoModel{
 	public static function model($className=__CLASS__){
 		if(isset(self::$_models[$className]))
 			return self::$_models[$className];
-		else{
-            /** @var EMongoDocument $model */
-			$model = self::$_models[$className] = new $className(null);
-			$model->attachBehaviors($model->behaviors());
-			return $model;
-		}
+		/** @var EMongoDocument $model */
+		$model = self::$_models[$className] = new $className(null);
+		$model->attachBehaviors($model->behaviors());
+		return $model;
 	}
 
 	/**
 	 * Instantiates a model from an array
 	 * @param array $document
-     * @return EMongoDocument
-     */
-    protected function instantiate($document){
+	 * @return EMongoDocument
+	 */
+	protected function instantiate($document){
 		$class = get_class($this);
-		$model = new $class(null);
-		return $model;
-    }
+		return new $class(null);
+	}
 
 	/**
 	 * Returns the text label for the specified attribute.
@@ -287,7 +330,7 @@ class EMongoDocument extends EMongoModel{
 	 * returning the label defined in relational object.
 	 * In particular, if the attribute name is in the form of "post.author.name",
 	 * then this method will derive the label from the "author" relation's "name" attribute.
-     * @see CModel::generateAttributeLabel()
+	 * @see CModel::generateAttributeLabel()
 	 * @param string $attribute - the attribute name
 	 * @return string - the attribute label
 	 */
@@ -296,103 +339,131 @@ class EMongoDocument extends EMongoModel{
 		$labels = $this->attributeLabels();
 		if(isset($labels[$attribute]))
 			return $labels[$attribute];
-		elseif(strpos($attribute, '.') !== false)
-		{
-			$segs = explode('.', $attribute);
-			$name = array_pop($segs);
-			$model = $this;
-			foreach($segs as $seg)
-			{
-				$relations = $model->relations();
-				if(isset($relations[$seg]))
-					$model = EMongoDocument::model($relations[$seg][1]);
-				else
-					break;
-			}
-			return $model->getAttributeLabel($name);
-		}
-		else
+		if(strpos($attribute, '.') === false)
 			return $this->generateAttributeLabel($attribute);
+		$segs = explode('.', $attribute);
+		$name = array_pop($segs);
+		$model = $this;
+		foreach($segs as $seg)
+		{
+			$relations = $model->relations();
+			if(!isset($relations[$seg]))
+				break;
+			$model = EMongoDocument::model($relations[$seg][1]);
+		}
+		return $model->getAttributeLabel($name);
 	}
 
 	/**
 	 * Creates an active record with the given attributes.
 	 * This method is internally used by the find methods.
-     * Null is returned if the input data is false.
-     *
+	 * Null is returned if the input data is false.
+	 *
 	 * @param array $attributes - attribute values (column name=>column value)
 	 * @param boolean $callAfterFind whether to call {@link afterFind} after the record is populated.
-     * @param bool $partial
+	 * @param bool $partial
 	 * @return EMongoDocument|null - the newly created active record. The class of the object is the same as the model class.
 	 */
-    public function populateRecord($attributes, $callAfterFind = true, $partial = false)
+	public function populateRecord($attributes, $callAfterFind = true, $partial = false)
 	{
-		if($attributes !== false)
+		if($attributes === false)
+			return null;
+		$record = $this->instantiate($attributes);
+		$record->setScenario('update');
+		$record->setIsNewRecord(false);
+		$record->init();
+
+		$labels = array();
+		foreach($attributes as $name=>$value)
 		{
-			$record = $this->instantiate($attributes);
-			$record->setScenario('update');
-			$record->setIsNewRecord(false);
-			$record->init();
-
-			$labels = array();
-			foreach($attributes as $name=>$value)
-			{
-				$labels[$name] = 1;
-				$record->$name = $value;
-			}
-
-			if($partial){
-				$record->setIsPartial(true);
-				$record->setProjectedFields($labels);
-			}
-			//$record->_pk=$record->primaryKey();
-			$record->attachBehaviors($record->behaviors());
-			if($callAfterFind)
-				$record->afterFind();
-			return $record;
+			$labels[$name] = 1;
+			$record->$name = $value;
 		}
-		return null;
+
+		if($partial){
+			$record->setIsPartial(true);
+			$record->setProjectedFields($labels);
+		}
+		//$record->_pk=$record->primaryKey();
+		$record->attachBehaviors($record->behaviors());
+		if($callAfterFind)
+			$record->afterFind();
+		return $record;
+	}
+
+	/**
+	 * Returns an array of records populated by incoming data
+	 * @param array $data
+	 * @param bool $callAfterFind
+	 * @param string $index
+	 * @return array - Array of the records
+	 */
+	public function populateRecords(array $data, $callAfterFind = true, $index = null)
+	{
+		$records = array();
+		foreach ($data as $attributes) {
+			if (($record = $this->populateRecord($attributes, $callAfterFind)) !== null) {
+				if ($index === null) {
+					$records[] = $record;
+				} else {
+					$records[$record->$index] = $record;
+				}
+			}
+		}
+		return $records;
 	}
 
 	/**********/
 	/* Events */
 	/**********/
 
-    /**
-     * @param CEvent $event
-     */
-    public function onBeforeSave($event){ $this->raiseEvent('onBeforeSave', $event); }
+	/**
+	 * @param CEvent $event
+	 */
+	public function onBeforeSave($event){
+		$this->raiseEvent('onBeforeSave', $event);
+	}
 
-    /**
-     * @param CEvent $event
-     */
-	public function onAfterSave($event){ $this->raiseEvent('onAfterSave', $event); }
+	/**
+	 * @param CEvent $event
+	 */
+	public function onAfterSave($event){
+		$this->raiseEvent('onAfterSave', $event);
+	}
 
-    /**
-     * @param CEvent $event
-     */
-	public function onBeforeDelete($event){ $this->raiseEvent('onBeforeDelete', $event); }
+	/**
+	 * @param CEvent $event
+	 */
+	public function onBeforeDelete($event){
+		$this->raiseEvent('onBeforeDelete', $event);
+	}
 
-    /**
-     * @param CEvent $event
-     */
-	public function onAfterDelete($event){ $this->raiseEvent('onAfterDelete', $event); }
+	/**
+	 * @param CEvent $event
+	 */
+	public function onAfterDelete($event){
+		$this->raiseEvent('onAfterDelete', $event);
+	}
 
-    /**
-     * @param CEvent $event
-     */
-	public function onBeforeFind($event){ $this->raiseEvent('onBeforeFind', $event); }
+	/**
+	 * @param CEvent $event
+	 */
+	public function onBeforeFind($event){
+		$this->raiseEvent('onBeforeFind', $event);
+	}
 
-    /**
-     * @param CEvent $event
-     */
-	public function onAfterFind($event){ $this->raiseEvent('onAfterFind', $event); }
+	/**
+	 * @param CEvent $event
+	 */
+	public function onAfterFind($event){
+		$this->raiseEvent('onAfterFind', $event);
+	}
 
 
-    /**
-     * @return bool
-     */
-    protected function beforeSave()
+	/**
+	 * @return bool
+	 */
+	protected function beforeSave()
 	{
 		if($this->hasEventHandler('onBeforeSave'))
 		{
@@ -410,10 +481,10 @@ class EMongoDocument extends EMongoModel{
 	}
 
 
-    /**
-     * @return bool
-     */
-    protected function beforeDelete()
+	/**
+	 * @return bool
+	 */
+	protected function beforeDelete()
 	{
 		if($this->hasEventHandler('onBeforeDelete'))
 		{
@@ -435,8 +506,6 @@ class EMongoDocument extends EMongoModel{
 		if($this->hasEventHandler('onBeforeFind'))
 		{
 			$event = new CModelEvent($this);
-			// for backward compatibility
-			$event->criteria = func_num_args() > 0 ? func_get_arg(0) : null;
 			$this->onBeforeFind($event);
 		}
 	}
@@ -454,7 +523,7 @@ class EMongoDocument extends EMongoModel{
 	 *
 	 * @param boolean $runValidation
 	 * @param array $attributes
-     * @return bool
+	 * @return bool
 	 */
 	public function save($runValidation = true, $attributes = null){
 		if(!$runValidation || $this->validate($attributes))
@@ -465,54 +534,70 @@ class EMongoDocument extends EMongoModel{
 	/**
 	 * Saves only a specific subset of attributes as defined by the param
 	 * @param array $attributes
-     * @return bool
+	 * @return bool
 	 * @throws CDbException
 	 */
-    public function saveAttributes($attributes)
+	public function saveAttributes($attributes)
 	{
-		if(!$this->getIsNewRecord())
+		if($this->getIsNewRecord())
+			throw new CDbException(Yii::t('yii', 'The active record cannot be updated because it is new.'));
+		$this->trace(__FUNCTION__);
+		$values = array();
+		foreach($attributes as $name => $value)
 		{
-			$this->trace(__FUNCTION__);
-			$values = array();
-			foreach($attributes as $name => $value)
-			{
-				if(is_integer($name)){
-					$v = $this->$value;
-					if(is_array($this->$value)){
-						$v = $this->filterRawDocument($this->$value);
-					}
-					$values[$value] = $v;
-				}else
-					$values[$name] = $this->$name = $value;
-			}
-			if(!isset($this->{$this->primaryKey()}) || $this->{$this->primaryKey()}===null)
-				throw new CDbException(Yii::t('yii', 'The active record cannot be updated because its _id is not set!'));
-
-			return $this->updateByPk($this->{$this->primaryKey()}, $values);
+			if(is_integer($name)){
+				$v = $this->$value;
+				if(is_array($this->$value)){
+					$v = $this->filterRawDocument($this->$value);
+				}
+				$values[$value] = $v;
+			}else
+				$values[$name] = $this->$name = $value;
 		}
-		throw new CDbException(Yii::t('yii', 'The active record cannot be updated because it is new.'));
+		if(!isset($this->{$this->primaryKey()}) || $this->getPrimaryKey()===null)
+			throw new CDbException(Yii::t('yii', 'The active record cannot be updated because its _id is not set!'));
+
+		return $this->lastError=$this->updateByPk($this->getPrimaryKey(), array('$set'=>$values));
 	}
 
 	/**
 	 * Inserts this record
 	 * @param array $attributes
-     * @return bool
+	 * @return bool
 	 * @throws CDbException
 	 */
-    public function insert($attributes = null){
+	public function insert($attributes = null){
 		if(!$this->getIsNewRecord())
 			throw new CDbException(Yii::t('yii', 'The active record cannot be inserted to database because it is not new.'));
-		if($this->beforeSave())
-		{
-			$this->trace(__FUNCTION__);
+		if(!$this->beforeSave())
+			return false;
 
-			if(!isset($this->{$this->primaryKey()})) $this->{$this->primaryKey()} = new MongoId;
-			if($this->lastError = $this->getCollection()->insert($this->getRawDocument(), $this->getDbConnection()->getDefaultWriteConcern())){
-				$this->afterSave();
-				$this->setIsNewRecord(false);
-				$this->setScenario('update');
-				return true;
-			}
+		$this->trace(__FUNCTION__);
+
+		if($attributes!==null)
+			$document=$this->filterRawDocument($this->getAttributes($attributes));
+		else
+			$document=$this->getRawDocument();
+		if($this->versioned())
+			$document[$this->versionField()]=$this->{$this->versionField()}=1;
+
+		if(!isset($this->{$this->primaryKey()})) $document['_id']=$this->{$this->primaryKey()} = $this->getPrimaryKey();
+		if(YII_DEBUG){
+			// we're actually physically testing for Yii debug mode here to stop us from
+			// having to do the serialisation on the update doc normally.
+			Yii::trace('Executing insert: {$document:'.json_encode($document).'}', 'extensions.MongoYii.EMongoDocument');
+		}
+		if($this->getDbConnection()->enableProfiling)
+			Yii::beginProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.insert('.'{$document:'.json_encode($document).'})', 'extensions.MongoYii.EMongoDocument.insert');
+		$this->lastError = $this->getCollection()->insert($document, $this->getDbConnection()->getDefaultWriteConcern());
+		if($this->getDbConnection()->enableProfiling)
+			Yii::endProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.insert('.'{$document:'.json_encode($document).'})', 'extensions.MongoYii.EMongoDocument.insert');
+
+		if($this->lastError){
+			$this->afterSave();
+			$this->setIsNewRecord(false);
+			$this->setScenario('update');
+			return true;
 		}
 		return false;
 	}
@@ -520,59 +605,82 @@ class EMongoDocument extends EMongoModel{
 	/**
 	 * Updates this record
 	 * @param array $attributes
-     * @return bool
+	 * @return bool
 	 * @throws CDbException
+	 * @throws EMongoException
 	 */
-    public function update($attributes=null){
+	public function update($attributes=null){
 		if($this->getIsNewRecord())
 			throw new CDbException(Yii::t('yii', 'The active record cannot be updated because it is new.'));
-		if($this->beforeSave())
-		{
-			$this->trace(__FUNCTION__);
-			if($this->{$this->primaryKey()} === null) // An _id is required
-				throw new CDbException(Yii::t('yii', 'The active record cannot be updated because it has no _id.'));
+		if(!$this->beforeSave())
+			return false;
 
-			if($attributes !== null)
-				$attributes = $this->filterRawDocument($attributes);
-			elseif($this->getIsPartial()){
-				foreach($this->_projected_fields as $field => $v)
-					$attributes[$field] = $this->$field;
-				$attributes = $this->filterRawDocument($attributes);
-			}else
-				$attributes = $this->getRawDocument();
+		$this->trace(__FUNCTION__);
+		if($this->getPrimaryKey() === null) // An _id is required
+			throw new CDbException(Yii::t('yii', 'The active record cannot be updated because it has primary key set.'));
+
+		$partial=false;
+		if($attributes !== null){
+			$attributes = $this->filterRawDocument($this->getAttributes($attributes));
+			$partial=true;
+		}elseif($this->getIsPartial()){
+			foreach($this->_projected_fields as $field => $v)
+				$attributes[$field] = $this->$field;
+			$attributes = $this->filterRawDocument($attributes);
+			$partial=true;
+		}else
+			$attributes = $this->getRawDocument();
+		if(isset($attributes['_id']))
 			unset($attributes['_id']); // Unset the _id before update
 
-			$this->lastError = $this->updateByPk($this->{$this->primaryKey()}, array('$set' => $attributes));
-			$this->afterSave();
-			return true;
+		if($this->versioned()){
+
+			$version=$this->{$this->versionField()};
+			$attributes[$this->versionField()]=$this->{$this->versionField()}=$this->{$this->versionField()}>0?$this->{$this->versionField()}+1:1;
+
+			if($partial===true){ // If this is a partial docuemnt we use $set to replace that partial view
+				$attributes=array('$set' => $attributes);
+				if(!isset($this->_projected_fields[$this->versionField()]))
+					// We cannot rely on a partial document containing the version
+					// as such it has been disabled for partial documents
+					throw new EMongoException("You cannot update a versioned partial document unless you project out the version field as well");
+			}
+			$this->lastError = $this->updateAll(array($this->primaryKey() => $this->getPrimaryKey(), $this->versionField() => $version),$attributes,array('multiple'=>false));
+		}else{
+			if($partial===true) // If this is a partial docuemnt we use $set to replace that partial view
+				$attributes=array('$set' => $attributes);
+			$this->lastError = $this->updateByPk($this->getPrimaryKey(), $attributes);
 		}
-		return false;
+
+		if($this->versioned() && $this->lastError['n'] <= 0)
+			return false;
+		$this->afterSave();
+		return true;
 	}
 
 	/**
 	 * Deletes this record
-     * @return bool
+	 * @return bool
 	 * @throws CDbException
 	 */
 	public function delete(){
-		if(!$this->getIsNewRecord()){
-			$this->trace(__FUNCTION__);
-			if($this->beforeDelete()){
-				$result = $this->deleteByPk($this->{$this->primaryKey()});
-				$this->afterDelete();
-				return $result;
-			}
+		if($this->getIsNewRecord())
+			throw new CDbException(Yii::t('yii', 'The active record cannot be deleted because it is new.'));
+
+		$this->trace(__FUNCTION__);
+		if(!$this->beforeDelete())
 			return false;
-		}
-		throw new CDbException(Yii::t('yii', 'The active record cannot be deleted because it is new.'));
+		$result = $this->deleteByPk($this->getPrimaryKey());
+		$this->afterDelete();
+		return $result;
 	}
 
 	/**
 	 * Checks if a record exists in the database
-     * @param array $criteria
-     * @return bool
-     */
-    public function exists($criteria = array()){
+	 * @param array $criteria
+	 * @return bool
+	 */
+	public function exists($criteria = array()){
 		$this->trace(__FUNCTION__);
 
 		if($criteria instanceof EMongoCriteria)
@@ -592,69 +700,95 @@ class EMongoDocument extends EMongoModel{
 	}
 
 	/**
+	 * Is basically a find one of the last version to be saved
+	 * @return null|EMongoDocument
+	 */
+	public function getLatest(){
+		$c=$this->find(array($this->primaryKey()=>$this->getPrimaryKey()));
+		if($c->count()<=0)
+			return null;
+		foreach($c as $row)
+			return $this->populateRecord($row);
+		return null;
+	}
+
+	/**
 	 * Find one record
-     * @param array|EMongoCriteria $criteria
-     * @param array|string[] $fields
-     * @return EMongoDocument|null
-     */
-    public function findOne($criteria = array(), $fields = array()){
+	 * @param array|EMongoCriteria $criteria
+	 * @param array|string[] $fields
+	 * @return EMongoDocument|null
+	 */
+	public function findOne($criteria = array(), $fields = array()){
 		$this->trace(__FUNCTION__);
-		
+
 		$this->beforeFind(); // Apparently this is applied before even scopes...
 
 		if($criteria instanceof EMongoCriteria)
 			$criteria = $criteria->getCondition();
 		$c = $this->getDbCriteria();
-		if((
-			$record=$this->getCollection()->findOne($this->mergeCriteria(isset($c['condition']) ? $c['condition'] : array(), $criteria),
-				$this->mergeCriteria(isset($c['project']) ? $c['project'] : array(), $fields))
-		) !== null){
-			$this->resetScope();
-			return $this->populateRecord($record, true, $fields === array() ? false : true);
-		}
-		return null;
+
+		$query=$this->mergeCriteria(isset($c['condition']) ? $c['condition'] : array(), $criteria);
+		$project=$this->mergeCriteria(isset($c['project']) ? $c['project'] : array(), $fields);
+
+		Yii::trace('Executing findOne: '.'{$query:'.json_encode($query).',$project:'.json_encode($project).'}','extensions.MongoYii.EMongoDocument');
+
+		if($this->getDbConnection()->enableProfiling)
+			Yii::beginProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.findOne('.'{$query:'.json_encode($query).',$project:'.json_encode($project).'}'.')',
+					'extensions.MongoYii.EMongoDocument.findOne');
+
+		$record=$this->getCollection()->findOne($query,$project);
+
+		if($this->getDbConnection()->enableProfiling)
+			Yii::endProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.findOne('.'{$query:'.json_encode($query).',$project:'.json_encode($project).'}'.')',
+					'extensions.MongoYii.EMongoDocument.findOne');
+
+		if($record === null)
+			return null;
+
+		$this->resetScope(false);
+		return $this->populateRecord($record, true, $project === array() ? false : true);
 	}
 
 	/**
 	 * Alias of find
-     * @param array $criteria
-     * @param array|string[] $fields
-     * @return EMongoCursor|EMongoDocument[]
-     */
-    public function findAll($criteria = array(), $fields = array()){
-    	return $this->find($criteria, $fields);
-    }
+	 * @param array $criteria
+	 * @param array|string[] $fields
+	 * @return EMongoCursor|EMongoDocument[]
+	 */
+	public function findAll($criteria = array(), $fields = array()){
+		return $this->find($criteria, $fields);
+	}
 
-    /**
-     * Finds all records based on $pk
-     * @param mixed $pk - String, MongoID or array of strings or MongoID values (one can mix strings and MongoID in the array)
-     * @param array|string[] $fields
-     * @return EMongoCursor|EMongoDocument[]
-     * @throws CDbException
-     */
-    public function findAllByPk($pk, $fields = array()){
-    	if(is_string($pk) || $pk instanceof MongoId){
-    		return $this->find(array($this->primaryKey() => $this->getPrimaryKey($pk)), $fields);
-    	}else if(is_array($pk)){
-    		foreach($pk as $key => $value){
-    			$pk[$key] = $this->getPrimaryKey($value);
-    		}
-    		return $this->find(array($this->primaryKey() => array('$in' => $pk)), $fields);
-    	}
-        throw new CDbException(Yii::t('yii', 'Set an incorrect primary key.'));
-    }
+	/**
+	 * Finds all records based on $pk
+	 * @param mixed $pk - String, MongoID or array of strings or MongoID values (one can mix strings and MongoID in the array)
+	 * @param array|string[] $fields
+	 * @return EMongoCursor|EMongoDocument[]
+	 * @throws CDbException
+	 */
+	public function findAllByPk($pk, $fields = array()){
+		if(is_string($pk) || $pk instanceof MongoId)
+			return $this->find(array($this->primaryKey() => $this->getPrimaryKey($pk)), $fields);
+		if(!is_array($pk))
+			throw new CDbException(Yii::t('yii', 'Set an incorrect primary key.'));
+
+		foreach($pk as $key => $value){
+			$pk[$key] = $this->getPrimaryKey($value);
+		}
+		return $this->find(array($this->primaryKey() => array('$in' => $pk)), $fields);
+	}
 
 	/**
 	 * Find some records
-     * @param array|EMongoCriteria $criteria
-     * @param array|string[] $fields
-     * @return EMongoCursor|EMongoDocument[]
-     */
-    public function find($criteria = array(), $fields = array()){
-    	$this->trace(__FUNCTION__);
-    	
-    	$this->beforeFind(); // Apparently this is applied before even scopes...
-    	
+	 * @param array|EMongoCriteria $criteria
+	 * @param array|string[] $fields
+	 * @return EMongoCursor|EMongoDocument[]
+	 */
+	public function find($criteria = array(), $fields = array()){
+		$this->trace(__FUNCTION__);
+
+		$this->beforeFind(); // Apparently this is applied before even scopes...
+
 		if($criteria instanceof EMongoCriteria){
 			$c = $criteria->mergeWith($this->getDbCriteria())->toArray();
 			$criteria = array();
@@ -662,75 +796,125 @@ class EMongoDocument extends EMongoModel{
 			$c = $this->getDbCriteria();
 		}
 
-    	if($c !== array()){
-    		$cursor = new EMongoCursor($this, $this->mergeCriteria(isset($c['condition']) ? $c['condition'] : array(), $criteria),
-    			$this->mergeCriteria(isset($c['project']) ? $c['project'] : array(), $fields));
-			if(isset($c['sort'])) $cursor->sort($c['sort']);
-    		if(isset($c['skip'])) $cursor->skip($c['skip']);
-    		if(isset($c['limit'])) $cursor->limit($c['limit']);
+		$query=$this->mergeCriteria(isset($c['condition']) ? $c['condition'] : array(), $criteria);
+		$project=$this->mergeCriteria(isset($c['project']) ? $c['project'] : array(), $fields);
 
-    		$this->resetScope();
-	   		return $cursor;
-        }
-        return new EMongoCursor($this, $criteria, $fields);
-    }
+		Yii::trace('Executing find: '.
+				'{$query:'.json_encode($query)
+				.',$project:'.json_encode($project)
+				.(isset($c['sort']) ? ',$sort:'.json_encode($c['sort']).',' : '')
+				.(isset($c['skip']) ? ',$skip:'.json_encode($c['skip']).',' : '')
+				.(isset($c['limit']) ? ',$limit:'.json_encode($c['limit']).',' : '')
+				.'}','extensions.MongoYii.EMongoDocument');
+				if($this->getDbConnection()->enableProfiling) {
+					$token = 'extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.find('.'{$query:'.json_encode($query)
+					.',$project:'.json_encode($project)
+					.(isset($c['sort']) ? ',$sort:'.json_encode($c['sort']).',' : '')
+					.(isset($c['skip']) ? ',$skip:'.json_encode($c['skip']).',' : '')
+					.(isset($c['limit']) ? ',$limit:'.json_encode($c['limit']).',' : '')
+					.'})';
+					Yii::beginProfile($token, 'extensions.MongoYii.EMongoDocument.find');
+				}
 
-    /**
-     * Finds one by _id
-     * @param string|MongoId $_id
-     * @param array|string[] $fields
-     * @return EMongoDocument|null
-     */
-    public function findBy_id($_id, $fields = array()){
-    	$this->trace(__FUNCTION__);
+				if($c !== array()){
+					$cursor = new EMongoCursor($this, $query, $project);
+					if(isset($c['sort'])) $cursor->sort($c['sort']);
+					if(isset($c['skip'])) $cursor->skip($c['skip']);
+					if(isset($c['limit'])) $cursor->limit($c['limit']);
+					$this->resetScope(false);
+				} else {
+					$cursor = new EMongoCursor($this, $criteria, $project);
+				}
+				if($this->getDbConnection()->enableProfiling)
+					Yii::endProfile($token, 'extensions.MongoYii.EMongoDocument.find');
+
+				return $cursor;
+	}
+
+	/**
+	 * Finds one by _id
+	 * @param string|MongoId $_id
+	 * @param array|string[] $fields
+	 * @return EMongoDocument|null
+	 */
+	public function findBy_id($_id, $fields = array()){
+		$this->trace(__FUNCTION__);
 		$_id = $this->getPrimaryKey($_id);
 		return $this->findOne(array($this->primaryKey() => $_id), $fields);
-    }
+	}
 
-    /**
-     * An alias for findBy_id() that relates to Yiis own findByPk
-     * @param string|MongoId $pk
-     * @param array|string[] $fields
-     * @return EMongoDocument|null
-     */
-    public function findByPk($pk, $fields = array()){
-    	$this->trace(__FUNCTION__);
+	/**
+	 * An alias for findBy_id() that relates to Yiis own findByPk
+	 * @param string|MongoId $pk
+	 * @param array|string[] $fields
+	 * @return EMongoDocument|null
+	 */
+	public function findByPk($pk, $fields = array()){
+		$this->trace(__FUNCTION__);
 		return $this->findBy_id($pk, $fields);
-    }
+	}
 
-    /**
-     * Delete record by pk
-     * @param string|MongoId $pk
-     * @param array|EMongoCriteria $criteria
-     * @param array $options
-     * @return mixed
-     */
-    public function deleteByPk($pk, $criteria = array(), $options = array()){
+	/**
+	 * Delete record by pk
+	 * @param string|MongoId $pk
+	 * @param array|EMongoCriteria $criteria
+	 * @param array $options
+	 * @return mixed
+	 */
+	public function deleteByPk($pk, $criteria = array(), $options = array()){
 		$this->trace(__FUNCTION__);
 
 		if($criteria instanceof EMongoCriteria)
 			$criteria = $criteria->getCondition();
 		$pk = $this->getPrimaryKey($pk);
-		return $this->getCollection()->remove(array_merge(array($this->primaryKey() => $pk), $criteria),
-					array_merge($this->getDbConnection()->getDefaultWriteConcern(), $options));
+
+		$query=array_merge(array($this->primaryKey() => $pk), $criteria);
+
+		Yii::trace('Executing deleteByPk: '.'{$query:'.json_encode($query).'}','extensions.MongoYii.EMongoDocument');
+
+		if($this->getDbConnection()->enableProfiling)
+			Yii::beginProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.deleteByPk('.'{$query:'.json_encode($query).'}'.')'	,'extensions.MongoYii.EMongoDocument.deleteByPk');
+		$result = $this->getCollection()->remove($query, array_merge($this->getDbConnection()->getDefaultWriteConcern(), $options));
+		if($this->getDbConnection()->enableProfiling)
+			Yii::endProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.deleteByPk('.'{$query:'.json_encode($query).'}'.')'	,'extensions.MongoYii.EMongoDocument.deleteByPk');
+
+		return $result;
 	}
 
 	/**
 	 * Update record by PK
-     * @param string|MongoId $pk
-     * @param array $updateDoc
-     * @param array|EMongoCriteria $criteria
-     * @param array $options
-     * @return bool
-     */
-    public function updateByPk($pk, $updateDoc = array(), $criteria = array(), $options = array()){
+	 * @param string|MongoId $pk
+	 * @param array $updateDoc
+	 * @param array|EMongoCriteria $criteria
+	 * @param array $options
+	 * @return bool
+	 */
+	public function updateByPk($pk, $updateDoc = array(), $criteria = array(), $options = array()){
 		$this->trace(__FUNCTION__);
 
 		if($criteria instanceof EMongoCriteria)
 			$criteria = $criteria->getCondition();
 		$pk = $this->getPrimaryKey($pk);
-		return $this->getCollection()->update($this->mergeCriteria($criteria, array($this->primaryKey() => $pk)), $updateDoc,
+
+		$query=$this->mergeCriteria($criteria, array($this->primaryKey() => $pk));
+
+		if(YII_DEBUG){
+			// we're actually physically testing for Yii debug mode here to stop us from
+			// having to do the serialisation on the update doc normally.
+			Yii::trace('Executing updateByPk: '.'{$query:'.json_encode($query).',$document:'.json_encode($updateDoc).'}','extensions.MongoYii.EMongoDocument');
+		}
+		if($this->getDbConnection()->enableProfiling)
+			Yii::beginProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.updateByPk('.'{$query:'.json_encode($query).',$document:'.json_encode($updateDoc).'}'.')',
+					'extensions.MongoYii.EMongoDocument.updateByPk');
+
+		$result = $this->getCollection()->update($query, $updateDoc,
 				array_merge($this->getDbConnection()->getDefaultWriteConcern(), $options));
+
+		if($this->getDbConnection()->enableProfiling)
+			Yii::endProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.updateByPk('.'{$query:'.json_encode($query).',$document:'.json_encode($updateDoc).'}'.')',
+					'extensions.MongoYii.EMongoDocument.updateByPk');
+
+		return $result;
 	}
 
 	/**
@@ -738,39 +922,72 @@ class EMongoDocument extends EMongoModel{
 	 * @param array|EMongoCriteria $criteria
 	 * @param array $updateDoc
 	 * @param array $options
-     * @return bool
-     */
-    public function updateAll($criteria = array(), $updateDoc = array(), $options = array('multiple' => true)){
+	 * @return bool
+	 */
+	public function updateAll($criteria = array(), $updateDoc = array(), $options = array('multiple' => true)){
 		$this->trace(__FUNCTION__);
 
 		if($criteria instanceof EMongoCriteria)
 			$criteria = $criteria->getCondition();
-		return $this->getCollection()->update($criteria, $updateDoc, array_merge($this->getDbConnection()->getDefaultWriteConcern(), $options));
+		$options=array_merge($this->getDbConnection()->getDefaultWriteConcern(), $options);
+
+		if(YII_DEBUG){
+			// we're actually physically testing for Yii debug mode here to stop us from
+			// having to do the serialisation on the update doc normally.
+			Yii::trace('Executing updateAll: '.
+					'{$query:'.json_encode($criteria)
+					.',$document:'.json_encode($updateDoc)
+					.',$options:'.json_encode($options).'}','extensions.MongoYii.EMongoDocument');
+		}
+		if($this->getDbConnection()->enableProfiling)
+		{
+			$token = 'extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.updateAll('.'{$query:'.json_encode($criteria)
+			.',$document:'.json_encode($updateDoc)
+			.',$options:'.json_encode($options).'})';
+			Yii::beginProfile($token, 'extensions.MongoYii.EMongoDocument.updateAll');
+		}
+
+		$result = $this->getCollection()->update($criteria, $updateDoc, $options);
+
+		if($this->getDbConnection()->enableProfiling)
+			Yii::endProfile($token, 'extensions.MongoYii.EMongoDocument.updateAll');
+
+		return $result;
 	}
 
 	/**
 	 * Delete all records matching a criteria
 	 * @param array|EMongoCriteria $criteria
 	 * @param array $options
-     * @return mixed
-     */
-    public function deleteAll($criteria = array(), $options = array()){
+	 * @return mixed
+	 */
+	public function deleteAll($criteria = array(), $options = array()){
 		$this->trace(__FUNCTION__);
 
 		if($criteria instanceof EMongoCriteria)
 			$criteria = $criteria->getCondition();
-		return $this->getCollection()->remove($criteria, array_merge($this->getDbConnection()->getDefaultWriteConcern(), $options));
+
+		Yii::trace('Executing deleteAll: '.'{$query:'.json_encode($criteria).'}','extensions.MongoYii.EMongoDocument');
+		if($this->getDbConnection()->enableProfiling)
+			Yii::beginProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.deleteAll('.'{$query:'.json_encode($criteria).'}'.')','extensions.MongoYii.EMongoDocument.deleteAll');
+
+		$result = $this->getCollection()->remove($criteria, array_merge($this->getDbConnection()->getDefaultWriteConcern(), $options));
+
+		if($this->getDbConnection()->enableProfiling)
+			Yii::endProfile('extensions.MongoYii.EMongoDocument.query.'.$this->collectionName().'.deleteAll('.'{$query:'.json_encode($criteria).'}'.')','extensions.MongoYii.EMongoDocument.deleteAll');
+
+		return $result;
 	}
 
 	/**
 	 * @see http://www.yiiframework.com/doc/api/1.1/CActiveRecord#saveCounters-detail
-     * @param array $counters
-     * @param null $lower - define a lower that the counter should not pass. IS NOT ATOMIC
-     * @param null $upper
-     * @return bool
-     * @throws EMongoException
-     */
-    public function saveCounters(array $counters, $lower = null, $upper = null) {
+	 * @param array $counters
+	 * @param null $lower - define a lower that the counter should not pass. IS NOT ATOMIC
+	 * @param null $upper
+	 * @return bool
+	 * @throws EMongoException
+	 */
+	public function saveCounters(array $counters, $lower = null, $upper = null) {
 		$this->trace(__FUNCTION__);
 
 		if ($this->getIsNewRecord())
@@ -778,18 +995,18 @@ class EMongoDocument extends EMongoModel{
 		if(sizeof($counters) > 0){
 			foreach($counters as $key => $value){
 				if(
-					($lower !== null && (($this->$key + $value) >= $lower)) ||
-					($upper !== null && (($this->$key + $value) <= $upper)) ||
-					($lower === null && $upper === null)
+				($lower !== null && (($this->$key + $value) >= $lower)) ||
+				($upper !== null && (($this->$key + $value) <= $upper)) ||
+				($lower === null && $upper === null)
 				){
 					$this->$key = $this->$key + $value;
 				}else
 					unset($counters[$key]);
 			}
 			if(count($counters) > 0)
-				return $this->updateByPk($this->{$this->primaryKey()}, array('$inc' => $counters));
+				return $this->updateByPk($this->getPrimaryKey(), array('$inc' => $counters));
 		}
-		return true; // Assume true since the action did run it just had nothing to update...		
+		return true; // Assume true since the action did run it just had nothing to update...
 	}
 
 	/**
@@ -799,40 +1016,51 @@ class EMongoDocument extends EMongoModel{
 	 * @return int
 	 */
 	public function count($criteria = array()){
-	    $this->trace(__FUNCTION__);
+		$this->trace(__FUNCTION__);
 
-	    // If we provide a manual criteria via EMongoCriteria or an array we do not use the models own DbCriteria
+		// If we provide a manual criteria via EMongoCriteria or an array we do not use the models own DbCriteria
 		if (is_array($criteria) && empty($criteria)){
 			$criteria = $this->getDbCriteria();
 			$criteria = (isset($criteria['condition']) ? $criteria['condition'] : array());
 		}
-	    if($criteria instanceof EMongoCriteria)
-	        $criteria = $criteria->getCondition();
-	    return $this->getCollection()->find($criteria)->count();
+		if($criteria instanceof EMongoCriteria)
+			$criteria = $criteria->getCondition();
+		return $this->getCollection()->find($criteria)->count();
 	}
 
 	/**
 	 * Gives basic searching abilities for things like CGridView
-     * @param array $query - allows you to specify a query which should always take hold along with the searched fields
-     * @param array $project
-     * @return EMongoDataProvider
-     */
-    public function search($query = array(), $project = array()){
+	 * @param array $query - allows you to specify a query which should always take hold along with the searched fields
+	 * @param array $project - search fields
+	 * @param bool $partialMatch
+	 * @param array $sort
+	 * @return EMongoDataProvider
+	 */
+	public function search($query = array(), $project = array(), $partialMatch=false, $sort = array()){
 		$this->trace(__FUNCTION__);
 
 		foreach($this->getSafeAttributeNames() as $attribute){
 
 			$value = $this->{$attribute};
-			if($value !== null && $value !== ''){
-				if((is_array($value) && count($value)) || is_object($value)){
+			if ($value !== null && $value !== ''){
+				if((is_array($value) && count($value)) || is_object($value) || is_bool($value)){
 					$query[$attribute] = $value;
-				} elseif (is_string($value) && preg_match('/^(?:\s*(<>|\!=|<=|>=|<|>|=))?(.*)$/', $value, $matches)){
+				}elseif(preg_match('/^(?:\s*(<>|<=|>=|<|>|=))?(.*)$/', $value, $matches)) {
 					$value = $matches[2];
 					$op = $matches[1];
+					if ($partialMatch === true)
+						$value = new MongoRegex("/$value/i");
+					else {
+						if(
+						!is_bool($value) && !is_array($value) && preg_match('/^([0-9]|[1-9]{1}\d+)$/' /* Will only match real integers, unsigned */, $value) > 0
+						&& ( (PHP_INT_MAX > 2147483647 && (string)$value < '9223372036854775807') /* If it is a 64 bit system and the value is under the long max */
+								|| (string)$value < '2147483647' /* value is under 32bit limit */)
+						)
+							$value = (int)$value;
+					}
 
 					switch($op){
 						case '<>':
-						case '!=':
 							$query[$attribute] = array('$ne' => $value);
 							break;
 						case '<=':
@@ -855,16 +1083,16 @@ class EMongoDocument extends EMongoModel{
 				}
 			}
 		}
-		return new EMongoDataProvider(get_class($this), array('criteria' => array('condition' => $query, 'project' => $project)));
+		return new EMongoDataProvider($this, array('criteria' => array('condition' => $query, 'project' => $project, 'sort' => $sort)));
 	}
 
 	/**
 	 * This is an aggregate helper on the model
 	 * Note: This does not return the model but instead the result array directly from MongoDB.
 	 * @param array $pipeline
-     * @return mixed
-     */
-    public function aggregate($pipeline){
+	 * @return mixed
+	 */
+	public function aggregate($pipeline){
 		$this->trace(__FUNCTION__);
 		return Yii::app()->mongodb->aggregate($this->collectionName(), $pipeline);
 	}
@@ -875,26 +1103,76 @@ class EMongoDocument extends EMongoModel{
 	 * @link http://docs.mongodb.org/manual/reference/command/distinct/
 	 * @param string $key
 	 * @param array $query
-     * @return mixed
-     */
-    public function distinct($key, $query = array()){
+	 * @return mixed
+	 */
+	public function distinct($key, $query = array()){
 		$this->trace(__FUNCTION__);
 		$c = $this->getDbCriteria();
 		if(is_array($c) && isset($c['condition']) && !empty($c['condition']))
 			$query = CMap::mergeArray($query, $c['condition']);
 
 		return Yii::app()->mongodb->command(array(
-			'distinct' => $this->collectionName(),
-			'key' => $key,
-			'query' => $query
+				'distinct' => $this->collectionName(),
+				'key' => $key,
+				'query' => $query
 		));
 	}
 
-    /**
-     * Refreshes the data from the database
-     * @return bool
-     */
-    public function refresh(){
+	/**
+	 * A mapreduce helper for this model
+	 * @param MongoCode $map
+	 * @param MongoCode $reduce
+	 * @param MongoCode $finalize
+	 * @param array $out
+	 * @param array $query
+	 * @param array $options // All other options for input to the command
+	 * @return mixed
+	 */
+	public function mapreduce($map,$reduce,$finalize=null,$out,$query=array(),$options=array()){
+		return $this->getDbConnection()->getDB()->command(array_merge(array(
+				'mapreduce' => $this->collectionName(),
+				'map' => $map,
+				'reduce' => $reduce,
+				'finalize' => $finalize,
+				'query' => $query,
+				'out' => $out
+		),$options));
+	}
+	
+	/**
+	 * Allows a user to ensure a number of indexes using the format:
+	 * 
+	 * ensureIndexes(array(
+	 * 	array(array('email' => 1), array('unique' => true))
+	 * ))
+	 *
+	 * where the 0 offset in each nested array is the fields for the index and the 1 offset 
+	 * is the options. You don't have to define options for the index.
+	 * 
+	 * or:
+	 * 
+	 * ensureIndexes(array(
+	 * 	array('email' => 1, 'address' => -1)
+	 * ))
+	 * 
+	 * @param unknown $indexes
+	 */
+	public function ensureIndexes($indexes){
+		foreach($indexes as $index){
+			if(isset($index[0])){
+				$this->getCollection()->ensureIndex($index[0], isset($index[1]) ? $index[1] : array());
+			}else{
+				$this->getCollection()->ensureIndex($index, array());
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Refreshes the data from the database
+	 * @return bool
+	 */
+	public function refresh(){
 
 		$this->trace(__FUNCTION__);
 		if(!$this->getIsNewRecord() && ($record = $this->getCollection()->findOne(array($this->primaryKey() => $this->getPrimaryKey()))) !== null){
@@ -905,22 +1183,22 @@ class EMongoDocument extends EMongoModel{
 			return true;
 		}
 		return false;
-    }
+	}
 
-    /**
-     * A bit deceptive, this actually gets the last response from either save() or update(). The reason it is called this
-     * is because MongoDB calls it this and so it seems better to have unity on that front.
-     * @return array
-     */
-    public function getLastError(){
-		return $this->lastError;
-    }
-
-    /**
-     * gets and if null sets the db criteria for this model
-     * @param bool $createIfNull
+	/**
+	 * A bit deceptive, this actually gets the last response from either save() or update(). The reason it is called this
+	 * is because MongoDB calls it this and so it seems better to have unity on that front.
 	 * @return array
-     */
+	 */
+	public function getLastError(){
+		return $this->lastError;
+	}
+
+	/**
+	 * gets and if null sets the db criteria for this model
+	 * @param bool $createIfNull
+	 * @return array
+	 */
 	public function getDbCriteria($createIfNull = true)
 	{
 		if($this->_criteria===null)
@@ -943,40 +1221,40 @@ class EMongoDocument extends EMongoModel{
 	}
 
 	/**
-	 * Merges the currrent DB Criteria with the inputted one
+	 * Merges the current DB Criteria with the inputted one
 	 * @param array|EMongoCriteria $newCriteria
 	 * @return array
 	 */
 	public function mergeDbCriteria($newCriteria){
-        if ($newCriteria instanceof EMongoCriteria){
-            $newCriteria = $newCriteria->toArray();
-        }
-		 return $this->setDbCriteria($this->mergeCriteria($this->getDbCriteria(), $newCriteria));
+		if ($newCriteria instanceof EMongoCriteria){
+			$newCriteria = $newCriteria->toArray();
+		}
+		return $this->setDbCriteria($this->mergeCriteria($this->getDbCriteria(), $newCriteria));
 	}
 
-    /**
-     * Gets the collection for this model
-     * @return MongoCollection
-     */
-    public function getCollection(){
+	/**
+	 * Gets the collection for this model
+	 * @return MongoCollection
+	 */
+	public function getCollection(){
 		return $this->getDbConnection()->{$this->collectionName()};
-    }
+	}
 
-    /**
-     * Merges two criteria objects. Best used for scopes
-     * @param array $oldCriteria
-     * @param array $newCriteria
+	/**
+	 * Merges two criteria objects. Best used for scopes
+	 * @param array $oldCriteria
+	 * @param array $newCriteria
 	 * @return array
-     */
-    public function mergeCriteria($oldCriteria, $newCriteria){
+	 */
+	public function mergeCriteria($oldCriteria, $newCriteria){
 		return CMap::mergeArray($oldCriteria, $newCriteria);
-    }
+	}
 
-    /**
-     * Produces a trace message for functions in this class
-     * @param string $func
-     */
-    public function trace($func){
-    	Yii::trace(get_class($this) . '.' . $func . '()', 'extensions.MongoYii.EMongoDocument');
-    }
+	/**
+	 * Produces a trace message for functions in this class
+	 * @param string $func
+	 */
+	public function trace($func){
+		Yii::trace(get_class($this) . '.' . $func . '()', 'extensions.MongoYii.EMongoDocument');
+	}
 }

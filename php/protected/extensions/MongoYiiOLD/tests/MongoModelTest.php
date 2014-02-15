@@ -30,52 +30,40 @@ class MongoModelTest extends CTestCase{
 		$this->assertTrue($d->hasAttribute('dum'));
 
 		$an = $d->attributeNames();
-		$this->assertArrayHasKey('dum',array_flip($an));
+		$this->assertTrue(array_key_exists('dum',array_flip($an)));
 
 		$d->username = 'sammaye';
 		$attr = $d->getAttributes();
-		$this->assertArrayHasKey('username', $attr);
-		$this->assertArrayHasKey('dum', $attr);
+		$this->assertTrue(array_key_exists('username', $attr));
+		$this->assertTrue(array_key_exists('dum', $attr));
 	}
 
-	/**
-	 * @covers EMongoModel::getDbConnection
-	 */
-	function testGetDbConnection(){
+	function testGetDBConnection(){
 		$d = new Dummy();
 		$dbc = $d->getDbConnection();
 		$this->assertInstanceOf('EMongoClient', $dbc);
 	}
 
-	/**
-	 * @covers EMongoModel::getDocument
-	 */
 	function testGetDocument(){
 		$d = new Dummy();
 		$d->dum = 'dum-dum';
 		$d->username = 'sammaye';
 
 		$doc = $d->getDocument();
-		$this->assertArrayHasKey('username', $doc);
-		$this->assertArrayHasKey('dum', $doc);
+		$this->assertTrue(array_key_exists('username', $doc));
+		$this->assertTrue(array_key_exists('dum', $doc));
 	}
 
-	/**
-	 * @covers EMongoModel::getRawDocument
-	 */
 	function testGetRawDocument(){
 		$d = new Dummy();
 		$d->dum = 'dum-dum';
 		$d->username = 'sammaye';
 
 		$doc = $d->getRawDocument();
-		$this->assertArrayHasKey('username', $doc);
-		$this->assertArrayHasKey('dum', $doc);
+		$this->assertTrue(array_key_exists('username', $doc));
+		$this->assertTrue(array_key_exists('dum', $doc));
 	}
 
-	/**
-	 * @covers EMongoModel::getJSONDocument
-	 */
 	function testGetJSONDocument(){
 		$d = new Dummy();
 		$d->dum = 'dum-dum';
@@ -86,9 +74,6 @@ class MongoModelTest extends CTestCase{
 		$this->assertTrue(array_key_exists('dum', json_decode($doc)));
 	}
 
-	/**
-	 * @covers EMongoModel::getBSONDocument
-	 */
 	function testGetBSONDocument(){
 		$d = new Dummy();
 		$d->dum = 'dum-dum';

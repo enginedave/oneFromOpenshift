@@ -1,5 +1,8 @@
 <?php
 
+/**
+ *
+ */
 class EMongoModel extends CModel{
 
 	/**
@@ -17,88 +20,92 @@ class EMongoModel extends CModel{
 	private $_partial=false;
 
 	/**
+	 * (non-PHPdoc)
 	 * @see yii/framework/CComponent::__get()
-	 * @param string $name
-	 * @return mixed
 	 */
 	public function __get($name){
 
 		if(isset($this->_attributes[$name]))
 			return $this->_attributes[$name];
-		if(isset($this->_related[$name]))
+		elseif(isset($this->_related[$name]))
 			return $this->_related[$name];
-		if(array_key_exists($name, $this->relations()))
+		elseif(array_key_exists($name, $this->relations()))
 			return $this->_related[$name]=$this->getRelated($name);
-		try {
-			return parent::__get($name);
-		} catch (CException $e) {
-			return null;
+		else{
+			try {
+				return parent::__get($name);
+			} catch (CException $e) {
+				return null;
+			}
 		}
 	}
 
 	/**
+	 * (non-PHPdoc)
 	 * @see CComponent::__set()
-	 * @param string $name
-	 * @param mixed $value
-	 * @return mixed
 	 */
-	public function __set($name, $value){
+	public function __set($name,$value){
 
 		if(isset($this->_related[$name]) || array_key_exists($name, $this->relations()))
-			return $this->_related[$name]=$value;
-		// This might be a little unperformant actually since Yiis own active record detects
-		// If an attribute can be set first to ensure speed of accessing local variables...hmmm
-		try {
-			return parent::__set($name,$value);
-		} catch (CException $e) {
-			return $this->setAttribute($name,$value);
+			$this->_related[$name]=$value;
+		else{
+			// This might be a little unperformant actually since Yiis own active record detects
+			// If an attribute can be set first to ensure speed of accessing local variables...hmmm
+			try {
+				return parent::__set($name,$value);
+			} catch (CException $e) {
+				return $this->setAttribute($name,$value);
+			}
 		}
 	}
 
 	/**
+	 * (non-PHPdoc)
 	 * @see CComponent::__isset()
-	 * @param string $name
-	 * @return bool
 	 */
 	public function __isset($name){
 
 		if(isset($this->_attributes[$name]))
 			return true;
-		if(isset($this->_related[$name]))
+		elseif(isset($this->_related[$name]))
 			return true;
-		if(array_key_exists($name, $this->relations()))
+		elseif(array_key_exists($name, $this->relations()))
 			return $this->getRelated($name)!==null;
-		return parent::__isset($name);
+		else
+			return parent::__isset($name);
+
 	}
 
 	/**
+	 * (non-PHPdoc)
 	 * @see CComponent::__unset()
-	 * @param string $name
-	 * @return void
 	 */
 	public function __unset($name){
 
 		if(isset($this->_attributes[$name]))
 			unset($this->_attributes[$name]);
 		elseif(isset($this->_related[$name]))
-		unset($this->_related[$name]);
+			unset($this->_related[$name]);
 		else
 			parent::__unset($name);
+
 	}
 
 	/**
+	 * (non-PHPdoc)
 	 * @see CComponent::__call()
-	 * @param string $name
-	 * @param array $parameters
-	 * @return mixed
 	 */
 	public function __call($name,$parameters)
 	{
-		if(!array_key_exists($name, $this->relations()))
-			return parent::__call($name,$parameters);
-		if(empty($parameters))
-			return $this->getRelated($name,false);
-		return $this->getRelated($name,false,$parameters[0]);
+		if(array_key_exists($name, $this->relations()))
+		{
+			if(empty($parameters))
+				return $this->getRelated($name,false);
+			else
+				return $this->getRelated($name,false,$parameters[0]);
+		}
+
+		return parent::__call($name,$parameters);
 	}
 
 	/**
@@ -128,15 +135,12 @@ class EMongoModel extends CModel{
 	 * its {@link scenario} set.
 	 * You may override this method to provide code that is needed to initialize the model (e.g. setting
 	 * initial property values.)
-	 * @return bool
 	 */
-	public function init(){
-		return true;
-	}
+	public function init(){ return true; }
 
 	/**
+	 * (non-PHPdoc)
 	 * @see CModel::attributeNames()
-	 * @return array
 	 */
 	public function attributeNames(){
 
@@ -150,29 +154,25 @@ class EMongoModel extends CModel{
 	 * Holds all our relations
 	 * @return array
 	 */
-	public function relations(){
-		return array();
-	}
+	public function relations(){ return array(); }
 
 	/**
 	 * Finds out if a document attributes actually exists
 	 * @param string $name
-	 * @return bool
 	 */
 	public function hasAttribute($name)
 	{
 		$attrs = $this->_attributes;
 		$fields = $this->getDbConnection()->getFieldCache(get_class($this));
-		return isset($attrs[$name]) || isset($fields[$name]) || property_exists($this, $name) ? true : false;
+		return isset($attrs[$name])||isset($fields[$name])||property_exists($this, $name)?true:false;
 	}
 
 	/**
 	 * Sets the attribute of the model
 	 * @param string $name
 	 * @param mixed $value
-	 * @return bool
 	 */
-	public function setAttribute($name, $value){
+	public function setAttribute($name,$value){
 
 		if(property_exists($this,$name))
 			$this->$name=$value;
@@ -180,25 +180,23 @@ class EMongoModel extends CModel{
 			$this->_attributes[$name]=$value;
 		//else return false;
 		return true;
+
 	}
 
 	/**
 	 * Gets a document attribute
 	 * @param string $name
-	 * @return mixed
 	 */
 	public function getAttribute($name){
 		if(property_exists($this,$name))
 			return $this->$name;
-		if(isset($this->_attributes[$name]))
+		elseif(isset($this->_attributes[$name]))
 			return $this->_attributes[$name];
-		return null;
 	}
 
 	/**
+	 * (non-PHPdoc)
 	 * @see CModel::getAttributes()
-	 * @param bool $names
-	 * @return array
 	 */
 	public function getAttributes($names=true)
 	{
@@ -211,17 +209,20 @@ class EMongoModel extends CModel{
 			}
 		}
 
-		if(!is_array($names))
-			return $attributes;
-		$attrs=array();
-		foreach($names as $name)
+		if(is_array($names))
 		{
-			if(property_exists($this,$name))
-				$attrs[$name]=$this->$name;
-			else
-				$attrs[$name]=isset($attributes[$name])?$attributes[$name]:null;
+			$attrs=array();
+			foreach($names as $name)
+			{
+				if(property_exists($this,$name))
+					$attrs[$name]=$this->$name;
+				else
+					$attrs[$name]=isset($attributes[$name])?$attributes[$name]:null;
+			}
+			return $attrs;
 		}
-		return $attrs;
+		else
+			return $attributes;
 	}
 
 	/**
@@ -232,7 +233,7 @@ class EMongoModel extends CModel{
 	 * @see getSafeAttributeNames
 	 * @see attributeNames
 	 */
-	public function setAttributes($values, $safeOnly=true)
+	public function setAttributes($values,$safeOnly=true)
 	{
 		if(!is_array($values))
 			return;
@@ -243,14 +244,14 @@ class EMongoModel extends CModel{
 			$field_meta = isset($_meta[$name]) ? $_meta[$name] : array();
 			if($safeOnly){
 				if(isset($attributes[$name]))
-					$this->$name=!is_bool($value) && !is_array($value) && !is_object($value) && preg_match('/^([0-9]|[1-9]{1}\d+)$/' /* Will only match real integers, unsigned */, $value) > 0
-					&& ( (PHP_INT_MAX > 2147483647 && (string)$value < '9223372036854775807') /* If it is a 64 bit system and the value is under the long max */
-							|| (string)$value < '2147483647' /* value is under 32bit limit */) ? (int)$value : $value;
+					$this->$name=!is_bool($value) && !is_array($value) && preg_match('/^([0-9]|[1-9]{1}\d+)$/' /* Will only match real integers, unsigned */, $value) > 0
+						&& ( (PHP_INT_MAX > 2147483647 && (string)$value < '9223372036854775807') /* If it is a 64 bit system and the value is under the long max */
+								|| (string)$value < '2147483647' /* value is under 32bit limit */) ? (int)$value : $value;
 				elseif($safeOnly)
-				$this->onUnsafeAttribute($name,$value);
+					$this->onUnsafeAttribute($name,$value);
 			}else{
-				$this->$name=!is_bool($value) && !is_array($value) && !is_object($value) && preg_match('/^([0-9]|[1-9]{1}\d+)$$/' /* Will only match real integers, unsigned */, $value) > 0
-				&& ( (PHP_INT_MAX > 2147483647 && (string)$value < '9223372036854775807') || (string)$value < '2147483647') ? (int)$value : $value;
+				$this->$name=!is_bool($value) && !is_array($value) && preg_match('/^([0-9]|[1-9]{1}\d+)$$/' /* Will only match real integers, unsigned */, $value) > 0
+					&& ( (PHP_INT_MAX > 2147483647 && (string)$value < '9223372036854775807') || (string)$value < '2147483647') ? (int)$value : $value;
 			}
 		}
 	}
@@ -315,13 +316,13 @@ class EMongoModel extends CModel{
 
 		if(!isset($relations[$name]))
 			throw new EMongoException(Yii::t('yii','{class} does not have relation "{name}".',
-					array('{class}'=>get_class($this), '{name}'=>$name)));
+				array('{class}'=>get_class($this), '{name}'=>$name)));
 
 		Yii::trace('lazy loading '.get_class($this).'.'.$name,'extensions.MongoYii.EMongoModel');
 
 		// I am unsure as to the purpose of this bit
 		//if($this->getIsNewRecord() && !$refresh && ($relation instanceof CHasOneRelation || $relation instanceof CHasManyRelation))
-		//return $relation instanceof CHasOneRelation ? null : array();
+			//return $relation instanceof CHasOneRelation ? null : array();
 
 		$cursor = array();
 		$relation = $relations[$name];
@@ -329,30 +330,30 @@ class EMongoModel extends CModel{
 		// Let's get the parts of the relation to understand it entirety of its context
 		$cname = $relation[1];
 		$fkey = $relation[2];
-		$pk = isset($relation['on']) ? $this->{$relation['on']} : $this->getPrimaryKey();
+		$pk = isset($relation['on']) ? $this->{$relation['on']} : $this->{$this->primaryKey()};
 
 		// Form the where clause
-		$where = $params;
-		if(isset($relation['where'])&&!$params) $where = array_merge($relation['where'], $params);
-		
+		$where = array();
+		if(isset($relation['where'])) $where = array_merge($relation['where'], $params);
+
 		// Find out what the pk is and what kind of condition I should apply to it
 		if (is_array($pk)) {
-			//It is an array of references
-			if (MongoDBRef::isRef(reset($pk))) {
-				$result = array();
-				foreach ($pk as $singleReference) {
-					$row = $this->populateReference($singleReference, $cname);
-					if ($row) array_push($result, $row);
-				}
-				return $this->_related[$name]=$result;
-			}
+            	//It is an array of references
+            	if (MongoDBRef::isRef(reset($pk))) {
+                	$result = array();
+                	foreach ($pk as $singleReference) {
+                    		$row = $this->populateReference($singleReference, $cname);
+                    		if ($row) array_push($result, $row);
+                	}
+                	return $result;
+            	}
 			// It is an array of _ids
 			$clause = array_merge($where, array($fkey=>array('$in' => $pk)));
 		}elseif($pk instanceof MongoDBRef){
 
 			// I should probably just return it here
 			// otherwise I will continue on
-			return $this->_related[$name]=$this->populateReference($pk, $cname);
+			return $this->populateReference($pk, $cname);
 
 		}else{
 
@@ -360,35 +361,33 @@ class EMongoModel extends CModel{
 			$clause = array_merge($where, array($fkey=>$pk));
 		}
 
-        $o = $cname::model($cname);
+		$o = $cname::model();
 		if($relation[0]==='one'){
 
 			// Lets find it and return it
-			return $this->_related[$name] = $o->findOne($clause);
+			$cursor = $o->findOne($clause);
 		}elseif($relation[0]==='many'){
 
 			// Lets find them and return them
-			$cursor = $o->find($clause)
-				->sort(isset($relation['sort'])?$relation['sort']:array())
-				->skip(isset($relation['skip'])?$relation['skip']:null)
-				->limit(isset($relation['limit'])?$relation['limit']:null);
-			if(isset($relation['cache']) && $relation['cache']===true)
-				return $this->_related[$name]=iterator_to_array($cursor);
+			$cursor = $o->find($clause);
 		}
-		return $cursor; // FAIL SAFE
+		return $cursor;
 	}
 
+
+
 	/**
-	 * @param mixed $reference Reference to populate
-	 * @param null|string $cname Class of model to populate. If not specified, populates data on current model
-	 * @return EMongoModel
-	 */
-	public function populateReference($reference, $cname = null)
-	{
-		$row = MongoDBRef::get(self::$db->getDB(), $reference);
-		$o=(is_null($cname)) ? $this : $cname::model();
-		return $o->populateRecord($row);
-	}
+     	* @param mixed $reference Reference to populate
+     	* @param null|string $cname Class of model to populate. If not specified, populates data on current model
+     	* @return EMongoModel
+     	*/
+    	public function populateReference($reference, $cname = null)
+    	{
+        	$row = MongoDBRef::get(self::$db->getDB(), $reference);
+        	$o=(is_null($cname))?$this:$cname::model();
+        	return $o->populateRecord($row);
+    	}
+
 
 	/**
 	 * Returns a value indicating whether the named related object(s) has been loaded.
@@ -421,7 +420,8 @@ class EMongoModel extends CModel{
 	{
 		if($attribute===null)
 			return $this->_errors!==array();
-		return isset($this->_errors[$attribute]);
+		else
+			return isset($this->_errors[$attribute]);
 	}
 
 	/**
@@ -433,18 +433,8 @@ class EMongoModel extends CModel{
 	{
 		if($attribute===null)
 			return $this->_errors;
-		$attribute=trim(strtr($attribute,'][','['),']');
-		if(strpos($attribute,'[')!==false){
-			$prev=null;
-			foreach(explode('[',$attribute) as $piece){
-				if($prev===null&&isset($this->errors[$piece]))
-					$prev=&$this->_errors[$piece];
-				elseif(isset($prev[$piece]))
-				$prev=is_array($prev)?$prev[$piece]:$prev->$piece;
-			}
-			return $prev===null?array():$prev;
-		}
-		return isset($this->_errors[$attribute]) ? $this->_errors[$attribute] : array();
+		else
+			return isset($this->_errors[$attribute]) ? $this->_errors[$attribute] : array();
 	}
 
 	/**
@@ -454,18 +444,7 @@ class EMongoModel extends CModel{
 	 */
 	public function getError($attribute)
 	{
-		$attribute=trim(strtr($attribute,'][','['),']');
-		if(strpos($attribute,'[') === false)
-			return isset($this->_errors[$attribute]) ? reset($this->_errors[$attribute]) : null;
-
-		$prev=null;
-		foreach(explode('[',$attribute) as $piece){
-			if($prev===null&&isset($this->errors[$piece]))
-				$prev=&$this->_errors[$piece];
-			elseif(isset($prev[$piece]))
-			$prev=is_array($prev)?$prev[$piece]:$prev->$piece;
-		}
-		return $prev===null?null:reset($prev);
+		return isset($this->_errors[$attribute]) ? reset($this->_errors[$attribute]) : null;
 	}
 
 	/**
@@ -515,25 +494,27 @@ class EMongoModel extends CModel{
 	 * Returns the database connection used by active record.
 	 * By default, the "mongodb" application component is used as the database connection.
 	 * You may override this method if you want to use a different database connection.
-	 * @return EMongoClient - the database connection used by active record.
-	 * @throws EMongoException
+	 * @return EMongoClient the database connection used by active record.
 	 */
 	public function getDbConnection()
 	{
 		if(self::$db!==null)
 			return self::$db;
-		self::$db=Yii::app()->mongodb;
-		if(self::$db instanceof EMongoClient)
-			return self::$db;
-		throw new EMongoException(Yii::t('yii','MongoDB Active Record requires a "mongodb" EMongoClient application component.'));
+		else
+		{
+			self::$db=Yii::app()->mongodb;
+			if(self::$db instanceof EMongoClient)
+				return self::$db;
+			else
+				throw new EMongoException(Yii::t('yii','MongoDB Active Record requires a "mongodb" EMongoClient application component.'));
+		}
 	}
 
 	/**
 	 * Cleans or rather resets the document
-	 * @return bool
 	 */
-	public function clean(){
-		$this->_attributes=array();
+    public function clean(){
+    	$this->_attributes=array();
 		$this->_related=array();
 
 		// blank class properties
@@ -541,11 +522,10 @@ class EMongoModel extends CModel{
 		foreach($cache as $k => $v)
 			$this->$k = null;
 		return true;
-	}
+    }
 
 	/**
 	 * Gets the formed document with MongoYii objects included
-	 * @return array
 	 */
 	public function getDocument(){
 
@@ -560,7 +540,6 @@ class EMongoModel extends CModel{
 
 	/**
 	 * Gets the raw document with MongoYii objects taken out
-	 * @return array
 	 */
 	public function getRawDocument(){
 		return $this->filterRawDocument($this->getDocument());
@@ -569,7 +548,6 @@ class EMongoModel extends CModel{
 	/**
 	 * Filters a provided document to take out MongoYii objects.
 	 * @param array $doc
-	 * @return array
 	 */
 	public function filterRawDocument($doc){
 		if(is_array($doc)){

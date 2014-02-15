@@ -26,9 +26,6 @@ class MongoCursorTest extends CTestCase{
 		}
 	}
 
-	/**
-	 * @covers EMongoCursor::__construct
-	 */
 	function testDirectInstantiation(){
 
 		for($i=0;$i<=4;$i++){
@@ -43,9 +40,6 @@ class MongoCursorTest extends CTestCase{
 		$this->assertTrue($c->count() > 0);
 	}
 
-	/**
-	 * @covers EMongoCriteria
-	 */
 	function testEMongoCriteria(){
 
 		for($i=0;$i<=4;$i++){
@@ -58,8 +52,6 @@ class MongoCursorTest extends CTestCase{
 		$c = new EMongoCursor('User', $criteria);
 		$this->assertInstanceOf('EMongoCursor', $c);
 		$this->assertTrue($c->count() > 0);
-		// see also $this->testSkip_Limit()
-		$this->assertEquals(3, $c->count(true));
 
 	}
 
@@ -74,10 +66,5 @@ class MongoCursorTest extends CTestCase{
 
 		$this->assertInstanceOf('EMongoCursor', $c);
 		$this->assertTrue($c->count(true) == 3);
-	}
-
-	function tearDown(){
-		Yii::app()->mongodb->drop();
-		parent::tearDown();
 	}
 }

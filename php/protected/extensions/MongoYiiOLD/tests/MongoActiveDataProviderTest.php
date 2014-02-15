@@ -11,7 +11,6 @@ class MongoActiveDataProviderTest extends CTestCase{
 
 	/**
 	 * I am only testing my public API, not that of the CActiveDataProvider in general
-	 * @covers EMongoDataProvider
 	 */
 	function testFetchData(){
 
